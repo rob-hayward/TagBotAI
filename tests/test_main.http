@@ -8,7 +8,7 @@ Accept: application/json
 POST http://127.0.0.1:5000/process_text
 Content-Type: application/x-www-form-urlencoded
 
-content=This is a sample input string to be FORMATTED.
+content=This is a sample input string with AI, ML, and TAG as important keywords.
 
 ###
 
@@ -16,7 +16,7 @@ content=This is a sample input string to be FORMATTED.
 POST http://127.0.0.1:5000/process_text
 Content-Type: application/x-www-form-urlencoded
 
-content=This is a sample input string to be FORMATTED.
+content=AI and ML are key technologies in modern TAG-based systems.
 
 ###
 
@@ -24,8 +24,8 @@ content=This is a sample input string to be FORMATTED.
 POST http://127.0.0.1:5000/process_text
 Content-Type: application/x-www-form-urlencoded
 
-preface=In the context of Project0, please scan the following text and extract keywords.
-&content=This is a sample input string to be FORMATTED.
+preface=Analyze this text for keyword extraction:
+&content=Machine learning (ML) and artificial intelligence (AI) are revolutionizing TAG systems.
 
 ###
 
@@ -37,7 +37,7 @@ Content-Type: multipart/form-data; boundary=boundary
 Content-Disposition: form-data; name="file"; filename="test.txt"
 Content-Type: text/plain
 
-This is a sample input from a text file to be FORMATTED.
+This file contains references to AI, ML, and TAG as significant terms.
 --boundary--
 
 ###
@@ -49,10 +49,10 @@ Content-Type: multipart/form-data; boundary=boundary
 --boundary
 Content-Disposition: form-data; name="preface"
 
-In the context of Project0, please scan the following text and extract keywords.
+Please extract keywords such as AI, ML, and TAG from this document.
 --boundary
 Content-Disposition: form-data; name="file"; filename="test.txt"
 Content-Type: text/plain
 
-This is a sample input from a text file to be FORMATTED.
+The document discusses AI, ML, and TAG extensively.
 --boundary--

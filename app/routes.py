@@ -1,11 +1,23 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
 from pydantic import BaseModel
 from collections import defaultdict, Counter
+from keybert import KeyBERT
+import uuid
+import logging
 
 router = APIRouter()
 
-# Global dictionary to store tag words, associated documents, and their frequencies
+# Global dictionary to store tag words and associated document IDs with tag frequencies
 global_tag_dictionary = defaultdict(lambda: defaultdict(int))
+
+# Store documents with their unique IDs, tags, and frequencies
+document_store = {}
+
+# Initialize KeyBERT with a BERT model
+kw_model = KeyBERT()
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
 
 
 class TextInput(BaseModel):
@@ -20,6 +32,9 @@ async def process_text(
         preface: str = Form(""),
         body: TextInput = Body(None)
 ):
+    # Generate a unique document ID
+    document_id = generate_document_id()
+
     # Check if we have JSON input
     if body:
         content = body.content
@@ -44,19 +59,29 @@ async def process_text(
     # Now process the content alone for tag generation
     tag_frequencies = process_with_ai(text)
 
-    # Generate a unique tag identifier for the document
-    tag_identifier = generate_unique_tag_identifier(tag_frequencies)
+    # Store the document metadata in the document store
+    document_store[document_id] = {
+        "content": text,
+        "tags": tag_frequencies
+    }
 
-    # Update the global tag dictionary with frequencies
+    # Update the global tag dictionary with frequencies, using document ID
     for tag, frequency in tag_frequencies.items():
-        global_tag_dictionary[tag][tag_identifier] = frequency
+        global_tag_dictionary[tag][document_id] = frequency
 
     return {
+        "document_id": document_id,
         "formatted_text": format_text(text),
-        "tag_identifier": tag_identifier,
         "document_tag_frequencies": tag_frequencies,
         "global_tag_dictionary": {k: dict(v) for k, v in global_tag_dictionary.items()}
     }
+
+
+def generate_document_id() -> str:
+    """
+    Generate a unique identifier for each document.
+    """
+    return str(uuid.uuid4())
 
 
 def format_text(text: str) -> str:
@@ -69,27 +94,23 @@ def format_text(text: str) -> str:
 
 def process_with_ai(text: str) -> dict:
     """
-    Mock AI processing function.
-    Replace this with actual AI model integration.
-    Returns a dictionary with tag words as keys and their frequencies as values.
+    Uses KeyBERT to extract keywords and their frequencies.
     """
-    words = text.lower().split()
-    tag_candidates = ["ai", "ml", "tag"]  # Example tag words to consider
-    word_counts = Counter(words)
+    logging.info("Processing text with KeyBERT for keyword extraction.")
+    try:
+        # Extract keywords
+        keywords = kw_model.extract_keywords(text, keyphrase_ngram_range=(1, 1), stop_words='english', top_n=10,
+                                             diversity=0.7)
 
-    # Filter word counts to include only the tag candidates
-    tag_frequencies = {word: count for word, count in word_counts.items() if word in tag_candidates}
+        # Convert the list of keywords into a frequency dictionary
+        word_counts = Counter(keyword for keyword, score in keywords)
 
-    return tag_frequencies
+        logging.info(f"Extracted keywords: {keywords}")
+        return dict(word_counts)
+    except Exception as e:
+        logging.error(f"Error during keyword extraction: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error during keyword extraction: {str(e)}")
 
-
-def generate_unique_tag_identifier(tag_frequencies: dict) -> str:
-    """
-    Generate a unique identifier based on sorted tag words.
-    """
-    sorted_tags = sorted(tag_frequencies.keys())
-    unique_id = "_".join(sorted_tags)
-    return unique_id
 
 # TODO: Add support for other document types (PDF, DOCX, etc.)
 # TODO: Add image scanning capability (OCR to extract text from images)
