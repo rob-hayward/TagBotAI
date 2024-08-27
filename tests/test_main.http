@@ -1,3 +1,9 @@
+### Clear the database
+POST http://127.0.0.1:5000/clear_database
+Accept: application/json
+
+###
+
 ### Test root endpoint
 GET http://127.0.0.1:5000/
 Accept: application/json
@@ -6,38 +12,54 @@ Accept: application/json
 
 ### Test string processing endpoint with JSON payload
 POST http://127.0.0.1:5000/process_text
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
+x-user-id: test_user_123
 
-content=This is a sample input string with AI, ML, and TAG as important keywords.
-
-###
-
-### Test string input without preface (URL encoded form data)
-POST http://127.0.0.1:5000/process_text
-Content-Type: application/x-www-form-urlencoded
-
-content=AI and ML are key technologies in modern TAG-based systems.
+{
+  "content": "This is a sample input string with AI, ML, and TAG as important keywords.",
+  "preface": "This is a preface for the JSON payload test.",
+  "user_tags": ["keyword1", "keyword2"],
+  "privacy": "public"
+}
 
 ###
 
-### Test string input with preface (URL encoded form data)
+### Test string input without preface (form data)
 POST http://127.0.0.1:5000/process_text
 Content-Type: application/x-www-form-urlencoded
+x-user-id: test_user_123
 
-preface=Analyze this text for keyword extraction:
-&content=Machine learning (ML) and artificial intelligence (AI) are revolutionizing TAG systems.
+content=AI and ML are key technologies in modern TAG-based systems&user_tags=keyword3,keyword4&privacy=private
+
+###
+
+### Test string input with preface (form data)
+POST http://127.0.0.1:5000/process_text
+Content-Type: application/x-www-form-urlencoded
+x-user-id: test_user_123
+
+preface=Analyze this text for keyword extraction:&content=Machine learning (ML) and artificial intelligence (AI) are revolutionizing TAG systems.&user_tags=keyword5,keyword6&privacy=public
 
 ###
 
 ### Test file upload without preface (multipart/form-data)
 POST http://127.0.0.1:5000/process_text
 Content-Type: multipart/form-data; boundary=boundary
+x-user-id: test_user_123
 
 --boundary
 Content-Disposition: form-data; name="file"; filename="test.txt"
 Content-Type: text/plain
 
 This file contains references to AI, ML, and TAG as significant terms.
+--boundary
+Content-Disposition: form-data; name="user_tags"
+
+keyword7,keyword8
+--boundary
+Content-Disposition: form-data; name="privacy"
+
+private
 --boundary--
 
 ###
@@ -45,6 +67,7 @@ This file contains references to AI, ML, and TAG as significant terms.
 ### Test file upload with preface (multipart/form-data)
 POST http://127.0.0.1:5000/process_text
 Content-Type: multipart/form-data; boundary=boundary
+x-user-id: test_user_123
 
 --boundary
 Content-Disposition: form-data; name="preface"
@@ -55,4 +78,18 @@ Content-Disposition: form-data; name="file"; filename="test.txt"
 Content-Type: text/plain
 
 The document discusses AI, ML, and TAG extensively.
+--boundary
+Content-Disposition: form-data; name="user_tags"
+
+keyword9,keyword10
+--boundary
+Content-Disposition: form-data; name="privacy"
+
+public
 --boundary--
+
+###
+
+### Test retrieving documents from MongoDB
+GET http://127.0.0.1:5000/get_documents?limit=5&skip=0
+Accept: application/json
